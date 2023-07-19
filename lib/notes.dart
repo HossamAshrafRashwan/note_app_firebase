@@ -144,7 +144,7 @@ class _NotesScreenState extends State<NotesScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>   EditNoteScreen(id: notes[index]['id'],),
+        builder: (context) =>   EditNoteScreen(id: notes[index]['id'],note: notes[index],),
       ),
     ).then((value) async {
       print("NotesScreen => $value");

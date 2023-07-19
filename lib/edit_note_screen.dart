@@ -1,18 +1,26 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class EditNoteScreen extends StatefulWidget {
-  const EditNoteScreen({Key? key, required this.id}) : super(key: key);
-final String id;
+  EditNoteScreen({Key? key, required this.id, required this.note}) : super(key: key);
+  final String id;
+  Map<String, dynamic> note;
   @override
   State<EditNoteScreen> createState() => _EditNoteScreenState();
 }
 
 class _EditNoteScreenState extends State<EditNoteScreen> {
+
   final noteController = TextEditingController();
 
   final firestore = FirebaseFirestore.instance;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    noteController.text = widget.note["note"];
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -13,10 +13,10 @@ class NotesScreen extends StatefulWidget {
 }
 
 class _NotesScreenState extends State<NotesScreen> {
-
-  final noteController  = TextEditingController();
+  final noteController = TextEditingController();
 
   final firestore = FirebaseFirestore.instance;
+  final auth = FirebaseAuth.instance;
 
   List<Map<String, dynamic>> notes = [];
 
@@ -24,15 +24,13 @@ class _NotesScreenState extends State<NotesScreen> {
   void initState() {
     super.initState();
     getNotesFromFireStore();
-
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: (){
+        onPressed: () {
           navigateToAddNoteScreen();
         },
         child: const Icon(
@@ -41,14 +39,16 @@ class _NotesScreenState extends State<NotesScreen> {
       ),
       appBar: AppBar(
         actions: [
-          IconButton(onPressed: (){
-            FirebaseAuth.instance.signOut();
-            Navigator.pushReplacement(context,
-              MaterialPageRoute(
-                builder: (context) => const MyLoginScreen(),
-              ),
-            );
-          },
+          IconButton(
+            onPressed: () {
+              FirebaseAuth.instance.signOut();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MyLoginScreen(),
+                ),
+              );
+            },
             icon: const Icon(
               Icons.logout,
               color: Colors.white,
@@ -71,12 +71,12 @@ class _NotesScreenState extends State<NotesScreen> {
             itemCount: notes.length,
             itemBuilder: (context, index) {
               return noteItem(index);
-            }
-        ),
+            }),
       ),
     );
   }
-  Widget noteItem(int index){
+
+  Widget noteItem(int index) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10),
       padding: const EdgeInsets.all(15),
@@ -94,18 +94,17 @@ class _NotesScreenState extends State<NotesScreen> {
             ),
           ),
           IconButton(
-            onPressed: (){
+            onPressed: () {
               navigateToEditNoteScreen(index);
             },
-            icon: const Icon(
-                Icons.edit
-            ),
+            icon: const Icon(Icons.edit),
           ),
-          IconButton(onPressed: (){
-            firestore.collection("notes").doc(notes[index]["id"]).delete();
-            notes.removeAt(index);
-            setState(() {});
-          },
+          IconButton(
+            onPressed: () {
+              firestore.collection("notes").doc(notes[index]["id"]).delete();
+              notes.removeAt(index);
+              setState(() {});
+            },
             icon: const Icon(
               Icons.delete,
               color: Colors.red,
@@ -116,16 +115,18 @@ class _NotesScreenState extends State<NotesScreen> {
     );
   }
 
-  void getNotesFromFireStore(){
-    firestore.collection("notes").snapshots().listen((event) {
+  void getNotesFromFireStore() {
+    String userId = auth.currentUser!.uid;
+    firestore
+        .collection("notes")
+        .where("userID", isEqualTo: userId)
+        .get()
+        .then((value) {
       notes.clear();
-      for(var document in event.docs){
-        final note = document.data();
-        notes.add(note);
+      for (var document in value.docs) {
+        notes.add(document.data());
+        setState(() {});
       }
-      setState(() {
-
-      });
     });
   }
 
@@ -133,28 +134,29 @@ class _NotesScreenState extends State<NotesScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>  const AddNoteScreen(),
+        builder: (context) => const AddNoteScreen(),
       ),
-    ).then((value){
+    ).then((value) {
       getNotesFromFireStore();
     });
   }
 
-   navigateToEditNoteScreen(int index) {
+  navigateToEditNoteScreen(int index) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>   EditNoteScreen(id: notes[index]['id'],note: notes[index],),
+        builder: (context) => EditNoteScreen(
+          id: notes[index]['id'],
+          note: notes[index],
+        ),
       ),
     ).then((value) async {
       print("NotesScreen => $value");
       if (value == null) return;
       // notes.removeAt(index);
       // notes.insert(index, value);
-       notes[index] = value;
+      notes[index] = value;
       setState(() {});
-
     });
   }
-
 }
